@@ -1,133 +1,136 @@
-#include <iostream>
-#include <WinSock2.h>
+#include <winsock2.h>
+#include <stdio.h>
 
-#pragma comment(lib, "Ws2_32.lib")
-
-const char* IP_ADDRESS = "192.168.1.199";  // 雷达的IP地址
-const int PORT = 5000;                     // 雷达的端口号
-const int BUFFER_SIZE = 1024;              // 接收缓冲区大小
-
-const unsigned short CMD_START = 0x7362;   // 开始命令
-const unsigned short CMD_SELECT = 0x6531;  // 选择组命令
-const unsigned short CMD_SCAN = 0x652a;    // 开始扫描命令
-const unsigned short CMD_STOP = 0x6f70;    // 停止命令
-
-SOCKET sock;                                // 客户端Socket
-
-// 异步接收数据的回调函数
-void CALLBACK recv_callback(DWORD error, DWORD bytes_transferred, LPWSAOVERLAPPED overlapped, DWORD flags);
-
-int main() {
+SOCKET ConnectToRadar(const char* ipAddr, int port)
+{
     WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);  // 初始化Winsock2库
-
-    // 创建Socket
-    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sock == INVALID_SOCKET) {
-        std::cerr << "Failed to create socket: " << WSAGetLastError() << std::endl;
-        WSACleanup();
-        return 1;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        printf("WSAStartup failed: %d\n", WSAGetLastError());
+        return INVALID_SOCKET;
     }
 
-    // 设置服务器地址
-    sockaddr_in serverAddr;
-    memset(&serverAddr, 0, sizeof(serverAddr));
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_addr.s_addr = inet_addr(IP_ADDRESS);
-    serverAddr.sin_port = htons(PORT);
+    SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock == INVALID_SOCKET) {
+        printf("socket failed: %d\n", WSAGetLastError());
+        WSACleanup();
+        return INVALID_SOCKET;
+    }
 
-    // 连接到服务器
-    if (connect(sock, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
-        std::cerr << "Failed to connect to server: " << WSAGetLastError() << std::endl;
+    SOCKADDR_IN addr;
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(port);
+    addr.sin_addr.s_addr = inet_addr(ipAddr);
+
+    if (connect(sock, (SOCKADDR*)&addr, sizeof(addr)) == SOCKET_ERROR) {
+        printf("connect failed: %d\n", WSAGetLastError());
         closesocket(sock);
         WSACleanup();
-        return 1;
+        return INVALID_SOCKET;
     }
 
-    // 发送开始命令
-    unsigned short cmd = CMD_START;
-    send(sock, (const char*)&cmd, sizeof(cmd), 0);
+    return sock;
+}
+int ReceiveData(SOCKET sock, char* buf, int bufSize)
+{
+    int bytesRecv = 0;
 
-    // 异步接收数据
-    char buffer[BUFFER_SIZE];
-    WSAOVERLAPPED overlapped;
-    memset(&overlapped, 0, sizeof(overlapped));
-    overlapped.hEvent = WSACreateEvent();
-    DWORD flags = 0;
-    if (WSARecv(sock, buffer, BUFFER_SIZE, NULL, &flags, &overlapped, recv_callback) == SOCKET_ERROR) {
-        int error = WSAGetLastError();
-        if (error != WSA_IO_PENDING) {
-            std::cerr << "Failed to receive data: " << error << std::endl;
-            closesocket(sock);
-            WSACleanup();
-            return 1;
-        }
-    }
-
-    // 等待用户输入命令
-    std::cout << "Input command: ";
-    std::string input;
-    std::getline(std::cin, input);
-    while (input != "quit") {
-        // 将命令转换为16位无符号整数
-        unsigned short cmd = std::stoi(input, nullptr
-            // 发送命令
-            if (cmd == CMD_SELECT || cmd == CMD_SCAN || cmd == CMD_STOP) {
-                send(sock, (const char*)&cmd, sizeof(cmd), 0);
-            }
-
-        // 等待响应
-        memset(&overlapped, 0, sizeof(overlapped));
-        overlapped.hEvent = WSACreateEvent();
-        flags = 0;
-        if (WSARecv(sock, buffer, BUFFER_SIZE, NULL, &flags, &overlapped, recv_callback) == SOCKET_ERROR) {
+    while (true) {
+        int result = recv(sock, buf + bytesRecv, bufSize - bytesRecv, 0);
+        if (result == SOCKET_ERROR) {
             int error = WSAGetLastError();
-            if (error != WSA_IO_PENDING) {
-                std::cerr << "Failed to receive data: " << error << std::endl;
-                closesocket(sock);
-                WSACleanup();
-                return 1;
+            if (error != WSAEWOULDBLOCK) {
+                printf("recv failed: %d\n", error);
+                return -1;
             }
+            // 暂无数据可读，等待一段时间后再继续读取
+            Sleep(100);
         }
-
-        // 等待用户输入下一个命令
-        std::cout << "Input command: ";
-        std::getline(std::cin, input);
+        else if (result == 0) {
+            printf("Connection closed by remote host\n");
+            return -1;
+        }
+        else {
+            bytesRecv += result;
+            if (bytesRecv == bufSize) {
+                printf("Receive buffer overflow\n");
+                return -1;
+            }
+            // 数据接收完成
+            break;
+        }
     }
 
-    // 关闭Socket
-    closesocket(sock);
+    return bytesRecv;
+}
+int SendCommand(SOCKET sock, const char* cmd, int cmdLen, char* response, int respSize)
+{
+    // 发送命令
+    if (send(sock, cmd, cmdLen, 0) == SOCKET_ERROR) {
+        printf("send failed: %d\n", WSAGetLastError());
+        return -1;
+    }
 
-    // 释放Winsock2库资源
-    WSACleanup();
+    // 等待响应
+    int bytesRecv = ReceiveData(sock, response, respSize);
+    if (bytesRecv == -1) {
+        printf("Failed to receive response\n");
+        return -1;
+    }
+
+    // 处理响应
+    if (bytesRecv < 4) {
+        printf("Invalid response length: %d\n", bytesRecv);
+        return -1;
+    }
+
+    int status = (response[2] << 8) | response[3];
+    if (status != 0) {
+        printf("Command failed with status code: %d\n", status);
+        return -1;
+    }
 
     return 0;
 }
-
-// 异步接收数据的回调函数
-void CALLBACK recv_callback(DWORD error, DWORD bytes_transferred, LPWSAOVERLAPPED overlapped, DWORD flags) {
-    if (error == 0) {
-        char* buffer = (char*)overlapped->hEvent;
-        buffer[bytes_transferred] = '\0';
-        std::cout << "Received: " << buffer << std::endl;
-        // 继续异步接收数据
-        memset(overlapped, 0, sizeof(*overlapped));
-        overlapped->hEvent = WSACreateEvent();
-        DWORD flags = 0;
-        if (WSARecv(sock, buffer, BUFFER_SIZE, NULL, &flags, overlapped, recv_callback) == SOCKET_ERROR) {
-            int error = WSAGetLastError();
-            if (error != WSA_IO_PENDING) {
-                std::cerr << "Failed to receive data: " << error << std::endl;
-                closesocket(sock);
-                WSACleanup();
-                exit(1);
-            }
-        }
+int main_async()
+{
+    SOCKET sock = ConnectToRadar("192.168.1.199", 5000);
+    if (sock == INVALID_SOCKET) {
+        printf("Failed to connect to radar\n");
+        return 1;
     }
-    else {
-        std::cerr << "Error in recv_callback: " << error << std::endl;
+
+    char response[1024];
+    if (SendCommand(sock, "\x73\x62", 2, response, sizeof(response)) == -1) {
+        printf("Failed to send start command\n");
         closesocket(sock);
         WSACleanup();
-        exit(1);
+        return 1;
     }
+
+    if (SendCommand(sock, "\x65\x31", 2, response, sizeof(response)) == -1) {
+        printf("Failed to send select group command\n");
+        closesocket(sock);
+        WSACleanup();
+        return 1;
+    }
+
+    if (SendCommand(sock, "\x65\x2a", 2, response, sizeof(response)) == -1) {
+        printf("Failed to send start scan command\n");
+        closesocket(sock);
+        WSACleanup();
+        return 1;
+    }
+
+    // 扫描中，等待用户输入停止命令
+    if (SendCommand(sock, "\x6f\x70", 2, response, sizeof(response)) == -1) {
+        printf("Failed to send stop command\n");
+        closesocket(sock);
+        WSACleanup();
+        return 1;
+    }
+
+    closesocket(sock);
+    WSACleanup();
+
+    return 0;
 }
