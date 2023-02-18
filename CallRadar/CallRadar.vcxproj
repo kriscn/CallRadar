@@ -133,8 +133,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="async.cpp" />
-    <ClCompile Include="async2.cpp" />
-    <ClCompile Include="async3.cpp" />
     <ClCompile Include="fifth.cpp" />
     <ClCompile Include="first.cpp" />
     <ClCompile Include="fourth.cpp" />
