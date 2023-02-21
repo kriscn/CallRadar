@@ -71,7 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>F:\pcl\PCL 1.12.1\3rdParty\Boost\include\boost-1_78;$(IncludePath)</IncludePath>
+    <IncludePath>f:\pcl\PCL 1.12.1\3rdParty\Boost\include\boost-1_78;$(IncludePath)</IncludePath>
+    <LibraryPath>“$(SolutionDir)\packages\DotNext.Buffers.3.0.0\lib\netstandard2.0”;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -133,12 +134,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="async.cpp" />
+    <ClCompile Include="async2.cpp" />
+    <ClCompile Include="async3.cpp" />
+    <ClCompile Include="async4.cpp" />
     <ClCompile Include="fifth.cpp" />
     <ClCompile Include="first.cpp" />
     <ClCompile Include="fourth.cpp" />
+    <ClCompile Include="async5.cpp" />
+    <ClCompile Include="RadarFrameMessage.cpp" />
+    <ClCompile Include="savefile.cpp" />
     <ClCompile Include="second.cpp" />
     <ClCompile Include="seven.cpp" />
     <ClCompile Include="six.cpp" />
+    <ClCompile Include="StructConverter.cpp" />
     <ClCompile Include="third.cpp" />
   </ItemGroup>
   <ItemGroup>

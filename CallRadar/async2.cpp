@@ -75,6 +75,7 @@ private:
     tcp::socket socket_;
 };
 
+int main_async2()
 {
     try
     {
