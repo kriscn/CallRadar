@@ -4,6 +4,8 @@
 #include <thread>
 #include <stdio.h>
 #include <csignal>
+#include <chrono>
+#include <atomic>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -65,15 +67,18 @@ public:
 class Lidar {
 private:
     Socket m_socket;
-    std::thread m_receive_thread;
+    std::thread m_receive_thread;    
     bool m_stop_receive_thread;
-
-    void receive_data() {
+    std::atomic<std::chrono::time_point<std::chrono::system_clock>> m_last_receive_time;
+    
+    void receive_data() {        
+        //std::cout << "receive_data" << std::endl;
         char buffer[1024];
         while (!m_stop_receive_thread) {
             if (m_socket.receive(buffer, sizeof(buffer))) {
+                m_last_receive_time = std::chrono::system_clock::now();
                 // 处理接收到的数据
-                //std::cout << buffer << std::endl;
+                //std::cout << buffer[1010] << std::endl;
             }
         }
     }
@@ -92,6 +97,7 @@ public:
             return false;
         }
 
+        m_last_receive_time = std::chrono::system_clock::now();
         m_receive_thread = std::thread(&Lidar::receive_data, this);
         return true;
     }
@@ -103,6 +109,7 @@ public:
     }
 
     void start_receive() {
+        m_last_receive_time = std::chrono::system_clock::now();
         m_receive_thread = std::thread(&Lidar::receive_data, this);
     }
 
@@ -123,14 +130,26 @@ public:
         return m_socket.send(stop_command, 2);
     }
 
-    bool send_select_group_command() {
+    bool send_select_groupA_command() {
         const char* select_group_command = "\x65\x31";
+        return m_socket.send(select_group_command, 2);
+    }
+
+    bool send_select_groupE_command() {
+        const char* select_group_command = "\x65\x35";
         return m_socket.send(select_group_command, 2);
     }
 
     bool send_scan_command() {
         const char* scan_command = "\x65\x2a";
         return m_socket.send(scan_command, 2);
+    }
+
+    bool is_recent_data_received() {
+        auto now = std::chrono::system_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::seconds>(now - m_last_receive_time.load());
+
+        return diff.count() < 1;
     }
 
     ~Lidar() {
@@ -147,23 +166,28 @@ int main() {
     }
 
     Lidar lidar;
-
+    
     // 连接雷达
     if (!lidar.connect("192.168.1.199", 5000)) {
         std::cerr << "Failed to connect to Lidar" << std::endl;
         return 1;
-    }
-    
+    }    
+
     std::string command;
-    while (true) {
-        std::cout << "请输入指令（start、stop、scan或exit）: ";
+    while (true) {        
+        std::cout << "请输入指令（start、stop、scan、de或exit）: ";
         std::cin >> command;
 
         if (command == "start") {
-            std::cout << "开始执行start指令" << std::endl;
-            if (!lidar.send_start_command()) {
-                std::cerr << "Failed to send start command to Lidar." << std::endl;
-                return 1;
+            if (lidar.is_recent_data_received()) {
+                std::cout << "雷达正在运行，不需要启动" << std::endl;
+            }
+            else {
+                std::cout << "开始执行start指令" << std::endl;
+                if (!lidar.send_start_command()) {
+                    std::cerr << "Failed to send start command to Lidar." << std::endl;
+                    return 1;
+                }
             }
         }
         else if (command == "stop") {
@@ -175,15 +199,53 @@ int main() {
         }
         else if (command == "scan") {
             std::cout << "开始执行scan指令" << std::endl;
-            if (!lidar.send_select_group_command()) {
+            if (!lidar.send_select_groupA_command()) {
                 std::cerr << "Failed to send select group command." << std::endl;
                 return 1;
             }
-            Sleep(100);
+            Sleep(500);
             if (!lidar.send_scan_command()) {
                 std::cerr << "Failed to send scan command." << std::endl;
                 return 1;
             }
+            Sleep(500);
+            if (!lidar.send_stop_command()) {
+                std::cerr << "Failed to send stop command." << std::endl;
+                return 1;
+            }
+        }
+        else if (command == "de") {
+            std::cout << "开始下载E组数据" << std::endl;
+            //SendCommand Start
+            if (!lidar.is_recent_data_received()) {
+                if (!lidar.send_start_command()) {
+                    std::cerr << "Failed to send start command to Lidar." << std::endl;
+                    return 1;
+                }
+            }
+            //SendCommand DownloadGroupE
+            // Todo .....
+            // Todo .....
+            std::cout << "选择E组指令，Todo ....." << std::endl;
+            //SendCommand SelectGroupESingle
+            Sleep(500);
+            std::cout << "选择E组指令" << std::endl;
+            if (!lidar.send_select_groupE_command()) {
+                std::cerr << "Failed to send select group command." << std::endl;
+                return 1;
+            }
+            Sleep(500);
+            //SendCommand ScanSingle
+            std::cout << "发送扫描E组指令" << std::endl;
+            if (!lidar.send_scan_command()) {
+                std::cerr << "Failed to send scan command." << std::endl;
+                return 1;
+            }
+            /*Sleep(500);
+            if (!lidar.send_stop_command()) {
+                std::cerr << "Failed to send stop command." << std::endl;
+                return 1;
+            }*/
         }
         else if (command == "exit") {
             std::cout << "退出程序" << std::endl;

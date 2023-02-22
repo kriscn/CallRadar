@@ -1,104 +1,65 @@
-//#include <Windows.h>
-//#include <iostream>
-//#include <vector>
-//#include <memory>
-//#include <cstring>
-//
-//using namespace std;
-//
-//class StructConverter
-//{
-//public:
-//    template<typename T>
-//    static vector<uint8_t> StructToBytes(T structure)
-//    {
-//        int size = sizeof(T);
-//        cout << size << endl;
-//        auto buffer = static_cast<uint8_t*>(malloc(size));
-//        try
-//        {
-//            memcpy(buffer, &structure, size);
-//            vector<uint8_t> bytes(buffer, buffer + size);
-//            return bytes;
-//        }
-//        finally
-//        {
-//            free(buffer);
-//        }
-//    }
-//
-//    template<typename T>
-//    static vector<uint8_t> StructToBytes(T* structure)
-//    {
-//        int size = sizeof(T);
-//        int length = size * sizeof(structure);
-//        auto buffer = static_cast<uint8_t*>(malloc(length));
-//        try
-//        {
-//            memcpy(buffer, structure, length);
-//            vector<uint8_t> bytes(buffer, buffer + length);
-//            return bytes;
-//        }
-//        finally
-//        {
-//            free(buffer);
-//        }
-//    }
-//
-//    static vector<uint8_t> StructToBytes(void* structure)
-//    {
-//        int size = sizeof(structure);
-//        cout << size << endl;
-//        auto buffer = static_cast<uint8_t*>(malloc(size));
-//        try
-//        {
-//            memcpy(buffer, structure, size);
-//            vector<uint8_t> bytes(buffer, buffer + size);
-//            return bytes;
-//        }
-//        catch (const std::exception& e) {
-//            cout << "nothing" << endl;
-//        }
-//        /*finally
-//        {
-//            free(buffer);
-//        }*/
-//    }
-//
-//    static void* BytesToStruct(vector<uint8_t> bytes, type_info const& strcutType)
-//    {
-//        int size = strcutType.size();
-//        auto buffer = static_cast<uint8_t*>(malloc(size));
-//        try
-//        {
-//            memcpy(buffer, bytes.data(), size);
-//            return buffer;
-//        }
-//        catch (const std::exception& e) {
-//            cout << "nothing" << endl;
-//        }
-//        /*finally
-//        {
-//            free(buffer);
-//        }*/
-//    }
-//
-//    static void* BytesToStruct(ReadOnlySequence<uint8_t> memories, type_info const& strcutType)
-//    {
-//        int size = strcutType.size();
-//        auto buffer = static_cast<uint8_t*>(malloc(size));
-//        try
-//        {
-//            auto stackSpan = memories.ToArray();
-//            memcpy(buffer, stackSpan.data(), size);
-//            return buffer;
-//        }
-//        catch (const std::exception& e) {
-//            cout << "nothing" << endl;
-//        }
-//        /*finally
-//        {
-//            free(buffer);
-//        }*/
-//    }
-//};
+#include <Windows.h>
+#include <iostream>
+#include <vector>
+#include <cstring>
+#include <cstdint>
+
+class StructConverter
+{
+public:
+	template <typename T>
+	static std::vector<uint8_t> StructToBytes(const T& structure)
+	{
+		const int size = sizeof(T);
+		std::vector<uint8_t> bytes(size);
+		memcpy_s(bytes.data(), size, &structure, size);
+		return bytes;
+	}
+    template <typename T>
+    static std::vector<uint8_t> StructToBytes(const std::vector<T>& structure)
+    {
+        const int size = sizeof(T) * structure.size();
+        std::vector<uint8_t> bytes(size);
+        memcpy_s(bytes.data(), size, structure.data(), size);
+        return bytes;
+    }
+
+    static std::vector<uint8_t> StructToBytes(const void* structure, int size)
+    {
+        std::vector<uint8_t> bytes(size);
+        memcpy_s(bytes.data(), size, structure, size);
+        return bytes;
+    }
+
+    template <typename T>
+    static T BytesToStruct(const std::vector<uint8_t>& bytes)
+    {
+        T structure;
+        const int size = sizeof(T);
+        memcpy_s(&structure, size, bytes.data(), size);
+        return structure;
+    }
+
+    static void* BytesToStruct(const std::vector<uint8_t>& bytes, const std::type_info& structType)
+    {
+        const int size = static_cast<int>(bytes.size());
+        void* structure = malloc(size);
+        memcpy_s(structure, size, bytes.data(), size);
+        return structure;
+    }
+};
+
+int main_sample()
+{
+    // example usage:
+    struct TestStruct
+    {
+        int a;
+        double b;
+        char c[10];
+    };
+    TestStruct test = { 123, 3.14, "hello" };
+    auto bytes = StructConverter::StructToBytes(test);
+    TestStruct result = StructConverter::BytesToStruct<TestStruct>(bytes);
+    return 0;
+}
