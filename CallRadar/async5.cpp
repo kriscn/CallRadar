@@ -6,6 +6,8 @@
 #include <csignal>
 #include <chrono>
 #include <atomic>
+#include <vector>
+#include <cstdint>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -135,6 +137,50 @@ public:
         return m_socket.send(select_group_command, 2);
     }
 
+    bool download_groupE(uint16_t start_angle, uint16_t end_angle, uint8_t buffer_pos, uint16_t speed_ratio) {
+        // 不对
+        /*static char output[9];
+        output[0] = 0x59;
+        output[1] = static_cast<char>(start_angle);
+        output[2] = static_cast<char>(start_angle >> 8);
+        output[3] = static_cast<char>(end_angle);
+        output[4] = static_cast<char>(end_angle >> 8);
+        output[5] = buffer_pos;
+        output[6] = static_cast<char>(speed_ratio);
+        output[7] = static_cast<char>(speed_ratio >> 8);
+        output[8] = 0xaa;*/
+        // 不对
+        char buf[9];
+        buf[0] = static_cast<char>((0x59 & 0x7F));
+        buf[1] = (200 >> 8) & 0xFF;
+        buf[2] = 200 & 0xFF;
+        buf[3] = (160 >> 8) & 0xFF;
+        buf[4] = 160 & 0xFF;
+        buf[5] = 2 & 0xFF;
+        buf[6] = (600 >> 8) & 0xFF;
+        buf[7] = 600 & 0xFF;
+        buf[8] = 0xAA;
+
+        // 不对
+        //static char output[9];
+        //// 写入数据
+        //uint8_t prefix = 0x59;
+        //uint8_t suffix = 0xAA;
+        //output[0]=prefix;
+
+        //uint16_t bigEndianStartAngle = _byteswap_ushort(start_angle);
+        //uint16_t bigEndianEndAngle = _byteswap_ushort(end_angle);
+        //uint16_t bigEndianSpeed = _byteswap_ushort(speed_ratio);
+
+        //memcpy(output + 1, &bigEndianStartAngle, sizeof(bigEndianStartAngle));
+        //memcpy(output + 3, &bigEndianEndAngle, sizeof(bigEndianEndAngle));
+        //output[5] = buffer_pos;
+        //memcpy(output + 6, &bigEndianSpeed, sizeof(bigEndianSpeed));
+        //output[8] = suffix;
+
+        return m_socket.send(buf, 2);
+    }
+
     bool send_select_groupE_command() {
         const char* select_group_command = "\x65\x35";
         return m_socket.send(select_group_command, 2);
@@ -224,6 +270,10 @@ int main() {
                 }
             }
             //SendCommand DownloadGroupE
+            if (!lidar.download_groupE(200, 160, 2, 600)) {
+                std::cerr << "Failed to send download groupe command." << std::endl;
+                return 1;
+            }
             // Todo .....
             // Todo .....
             std::cout << "选择E组指令，Todo ....." << std::endl;

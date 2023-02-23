@@ -141,7 +141,6 @@
     <ClCompile Include="first.cpp" />
     <ClCompile Include="fourth.cpp" />
     <ClCompile Include="async5.cpp" />
-    <ClCompile Include="RadarCommandMessageSerializer.cpp" />
     <ClCompile Include="RadarFrameMessage.cpp" />
     <ClCompile Include="savefile.cpp" />
     <ClCompile Include="second.cpp" />
