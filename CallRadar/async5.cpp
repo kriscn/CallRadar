@@ -8,6 +8,7 @@
 #include <atomic>
 #include <vector>
 #include <cstdint>
+#include "RadarFrameMessage.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -73,15 +74,62 @@ private:
     bool m_stop_receive_thread;
     std::atomic<std::chrono::time_point<std::chrono::system_clock>> m_last_receive_time;
     
-    void receive_data() {        
+    void receive_data(bool printFlag) {        
         //std::cout << "receive_data" << std::endl;
-        char buffer[1024];
-        while (!m_stop_receive_thread) {
-            if (m_socket.receive(buffer, sizeof(buffer))) {
-                m_last_receive_time = std::chrono::system_clock::now();
-                // 处理接收到的数据
-                //std::cout << buffer[1010] << std::endl;
+        char recvBuff[1024];
+        try {
+            while (!m_stop_receive_thread) {
+                if (m_socket.receive(recvBuff, sizeof(recvBuff))) {
+                    m_last_receive_time = std::chrono::system_clock::now();
+                    // 处理接收到的数据
+                    if (printFlag) {
+                        //std::cout << recvBuff[1010] << std::endl;
+                        // 假设已经从网络接收到了1024字节的数据，并存储在recvBuff中
+                        RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
+                        std::cout << "msg.S3:" << msg.S3 << ";msg.S4:" << msg.S4 << std::endl;
+                        RadarRunningState state = msg.GetRunningState();
+                        // 处理其他雷达数据帧的内容
+                        if (state == RadarRunningState::Stopped) {
+                            // 雷达停止扫描
+                            std::cout << "雷达停止扫描......" << std::endl;
+                        }
+                        else if (state == RadarRunningState::Backing) {
+                            // 雷达正在返回
+                            std::cout << "雷达正在返回......" << std::endl;
+                        }
+                        else if (state == RadarRunningState::Completed) {
+                            // 雷达扫描完成
+                            std::cout << "雷达扫描完成......" << std::endl;
+                        }
+                        else if (state == RadarRunningState::ReadyA) {
+                            // 雷达组A已准备就绪
+                        }
+                        else if (state == RadarRunningState::ReadyB) {
+                            // 雷达组B已准备就绪
+                        }
+                        else if (state == RadarRunningState::ReadyC) {
+                            // 雷达组C已准备就绪
+                        }
+                        else if (state == RadarRunningState::ReadyD) {
+                            // 雷达组D已准备就绪
+                        }
+                        else if (state == RadarRunningState::ReadyE) {
+                            // 雷达组E已准备就绪
+                            std::cout << "雷达组E已准备就绪......" << std::endl;
+                        }
+                        else if (state == RadarRunningState::Scanning) {
+                            // 雷达组A已准备就绪
+                            //std::cout << "Scanning......" << std::endl;
+                        }
+                        else {
+                            std::cout << "nothing......" << std::endl;
+                        }
+                    }
+                }
             }
+        }
+        catch (const std::exception& e) {
+            std::cerr << "Error sending data: " << e.what() << std::endl;
         }
     }
 
@@ -100,7 +148,7 @@ public:
         }
 
         m_last_receive_time = std::chrono::system_clock::now();
-        m_receive_thread = std::thread(&Lidar::receive_data, this);
+        m_receive_thread = std::thread(&Lidar::receive_data, this ,true);
         return true;
     }
 
@@ -112,7 +160,7 @@ public:
 
     void start_receive() {
         m_last_receive_time = std::chrono::system_clock::now();
-        m_receive_thread = std::thread(&Lidar::receive_data, this);
+        m_receive_thread = std::thread(&Lidar::receive_data, this, true);
     }
 
     void stop_receive() {
@@ -249,7 +297,7 @@ int main() {
             Sleep(500);
             //SendCommand DownloadGroupE
             // start_angle<270;end_agnle>90
-            if (!lidar.download_groupE(270, 90, 2, 300)) {
+            if (!lidar.download_groupE(200, 160, 2, 300)) {
                 std::cerr << "Failed to send download groupe command." << std::endl;
                 return 1;
             }

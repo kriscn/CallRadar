@@ -51,16 +51,13 @@
     <ClCompile Include="async5.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RadarFrameMessage.cpp">
+    <ClCompile Include="RadarFrameMessage.h">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="StructConverter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="savefile.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="RadarCommandMessageSerializer.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
