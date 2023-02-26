@@ -137,53 +137,30 @@ public:
         return m_socket.send(select_group_command, 2);
     }
 
+    // start_angle<270;end_agnle>90
     bool download_groupE(uint16_t start_angle, uint16_t end_angle, uint8_t buffer_pos, uint16_t speed_ratio) {
-        // 不对
-        /*static char output[9];
-        output[0] = 0x59;
-        output[1] = static_cast<char>(start_angle);
-        output[2] = static_cast<char>(start_angle >> 8);
-        output[3] = static_cast<char>(end_angle);
-        output[4] = static_cast<char>(end_angle >> 8);
-        output[5] = buffer_pos;
-        output[6] = static_cast<char>(speed_ratio);
-        output[7] = static_cast<char>(speed_ratio >> 8);
-        output[8] = 0xaa;*/
-        // 不对
         char buf[9];
-        buf[0] = static_cast<char>((0x59 & 0x7F));
-        buf[1] = (200 >> 8) & 0xFF;
-        buf[2] = 200 & 0xFF;
-        buf[3] = (160 >> 8) & 0xFF;
-        buf[4] = 160 & 0xFF;
-        buf[5] = 2 & 0xFF;
-        buf[6] = (600 >> 8) & 0xFF;
-        buf[7] = 600 & 0xFF;
-        buf[8] = 0xAA;
+        buf[0] = 0x59;
+        //start_angle
+        buf[1] = (start_angle >> 8) & 0xFF;
+        buf[2] = start_angle & 0xFF;
+        //end_agnle
+        buf[3] = (end_angle >> 8) & 0xFF;
+        buf[4] = end_angle & 0xFF;
+        //buffer_pos
+        buf[5] = buffer_pos & 0xFF;
+        //speed_ratio
+        buf[6] = (speed_ratio >> 8) & 0xFF;
+        buf[7] = speed_ratio & 0xFF;
 
-        // 不对
-        //static char output[9];
-        //// 写入数据
-        //uint8_t prefix = 0x59;
-        //uint8_t suffix = 0xAA;
-        //output[0]=prefix;
+        buf[8] = 0xaa;
 
-        //uint16_t bigEndianStartAngle = _byteswap_ushort(start_angle);
-        //uint16_t bigEndianEndAngle = _byteswap_ushort(end_angle);
-        //uint16_t bigEndianSpeed = _byteswap_ushort(speed_ratio);
-
-        //memcpy(output + 1, &bigEndianStartAngle, sizeof(bigEndianStartAngle));
-        //memcpy(output + 3, &bigEndianEndAngle, sizeof(bigEndianEndAngle));
-        //output[5] = buffer_pos;
-        //memcpy(output + 6, &bigEndianSpeed, sizeof(bigEndianSpeed));
-        //output[8] = suffix;
-
-        return m_socket.send(buf, 2);
+        return m_socket.send((char*)buf, 9);
     }
 
     bool send_select_groupE_command() {
-        const char* select_group_command = "\x65\x35";
-        return m_socket.send(select_group_command, 2);
+        const char* select_groupE_command = "\x65\x35";
+        return m_socket.send(select_groupE_command, 2);
     }
 
     bool send_scan_command() {
@@ -254,14 +231,14 @@ int main() {
                 std::cerr << "Failed to send scan command." << std::endl;
                 return 1;
             }
-            Sleep(500);
+            /*Sleep(500);
             if (!lidar.send_stop_command()) {
                 std::cerr << "Failed to send stop command." << std::endl;
                 return 1;
-            }
+            }*/
         }
         else if (command == "de") {
-            std::cout << "开始下载E组数据" << std::endl;
+            std::cout << "0.开始下载E组数据" << std::endl;
             //SendCommand Start
             if (!lidar.is_recent_data_received()) {
                 if (!lidar.send_start_command()) {
@@ -269,24 +246,25 @@ int main() {
                     return 1;
                 }
             }
+            Sleep(500);
             //SendCommand DownloadGroupE
-            if (!lidar.download_groupE(200, 160, 2, 600)) {
+            // start_angle<270;end_agnle>90
+            if (!lidar.download_groupE(270, 90, 2, 300)) {
                 std::cerr << "Failed to send download groupe command." << std::endl;
                 return 1;
             }
             // Todo .....
             // Todo .....
-            std::cout << "选择E组指令，Todo ....." << std::endl;
             //SendCommand SelectGroupESingle
             Sleep(500);
-            std::cout << "选择E组指令" << std::endl;
+            std::cout << "1.选择E组指令" << std::endl;
             if (!lidar.send_select_groupE_command()) {
                 std::cerr << "Failed to send select group command." << std::endl;
                 return 1;
             }
             Sleep(500);
             //SendCommand ScanSingle
-            std::cout << "发送扫描E组指令" << std::endl;
+            std::cout << "2.发送扫描E组指令" << std::endl;
             if (!lidar.send_scan_command()) {
                 std::cerr << "Failed to send scan command." << std::endl;
                 return 1;
