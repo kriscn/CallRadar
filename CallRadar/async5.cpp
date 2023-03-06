@@ -70,61 +70,24 @@ public:
 class Lidar {
 private:
     Socket m_socket;
-    std::thread m_receive_thread;    
+    std::thread m_receive_thread;
     bool m_stop_receive_thread;
     std::atomic<std::chrono::time_point<std::chrono::system_clock>> m_last_receive_time;
-    
-    void receive_data(bool printFlag) {        
-        //std::cout << "receive_data" << std::endl;
-        char recvBuff[1024];
+
+    void receive_data() {
+        char recvBuff[6120];
         try {
             while (!m_stop_receive_thread) {
                 if (m_socket.receive(recvBuff, sizeof(recvBuff))) {
                     m_last_receive_time = std::chrono::system_clock::now();
                     // 处理接收到的数据
-                    if (printFlag) {
-                        //std::cout << recvBuff[1010] << std::endl;
-                        // 假设已经从网络接收到了1024字节的数据，并存储在recvBuff中
-                        RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
-                        std::cout << "msg.S3:" << msg.S3 << ";msg.S4:" << msg.S4 << std::endl;
-                        RadarRunningState state = msg.GetRunningState();
-                        // 处理其他雷达数据帧的内容
-                        if (state == RadarRunningState::Stopped) {
-                            // 雷达停止扫描
-                            std::cout << "雷达停止扫描......" << std::endl;
-                        }
-                        else if (state == RadarRunningState::Backing) {
-                            // 雷达正在返回
-                            std::cout << "雷达正在返回......" << std::endl;
-                        }
-                        else if (state == RadarRunningState::Completed) {
-                            // 雷达扫描完成
-                            std::cout << "雷达扫描完成......" << std::endl;
-                        }
-                        else if (state == RadarRunningState::ReadyA) {
-                            // 雷达组A已准备就绪
-                        }
-                        else if (state == RadarRunningState::ReadyB) {
-                            // 雷达组B已准备就绪
-                        }
-                        else if (state == RadarRunningState::ReadyC) {
-                            // 雷达组C已准备就绪
-                        }
-                        else if (state == RadarRunningState::ReadyD) {
-                            // 雷达组D已准备就绪
-                        }
-                        else if (state == RadarRunningState::ReadyE) {
-                            // 雷达组E已准备就绪
-                            std::cout << "雷达组E已准备就绪......" << std::endl;
-                        }
-                        else if (state == RadarRunningState::Scanning) {
-                            // 雷达组A已准备就绪
-                            //std::cout << "Scanning......" << std::endl;
-                        }
-                        else {
-                            std::cout << "nothing......" << std::endl;
-                        }
-                    }
+                    RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
+                    //std::cout << "msg.S3:" << msg.S3 << ";msg.S4:" << msg.S4 << std::endl;
+                    RadarRunningState state = msg.GetRunningState();
+                    /*if (msg.S3 == 9) {
+                        std::cout << "header.value2:" << msg.Header.Value2  << std::endl;
+                    }*/
+                    
                 }
             }
         }
@@ -148,7 +111,7 @@ public:
         }
 
         m_last_receive_time = std::chrono::system_clock::now();
-        m_receive_thread = std::thread(&Lidar::receive_data, this ,true);
+        m_receive_thread = std::thread(&Lidar::receive_data, this);
         return true;
     }
 
@@ -160,7 +123,7 @@ public:
 
     void start_receive() {
         m_last_receive_time = std::chrono::system_clock::now();
-        m_receive_thread = std::thread(&Lidar::receive_data, this, true);
+        m_receive_thread = std::thread(&Lidar::receive_data, this);
     }
 
     void stop_receive() {
@@ -240,12 +203,12 @@ int main() {
     
     // 连接雷达
     if (!lidar.connect("192.168.1.199", 5000)) {
-        std::cerr << "Failed to connect to Lidar" << std::endl;
+        std::cerr << "这里需要写发送给plc的重启雷达命令" << std::endl;
         return 1;
     }    
 
     std::string command;
-    while (true) {        
+    while (true) {
         std::cout << "请输入指令（start、stop、scan、de或exit）: ";
         std::cin >> command;
 

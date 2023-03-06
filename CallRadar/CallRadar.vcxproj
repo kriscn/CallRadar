@@ -137,6 +137,7 @@
     <ClCompile Include="async2.cpp" />
     <ClCompile Include="async3.cpp" />
     <ClCompile Include="async4.cpp" />
+    <ClCompile Include="chatgpt.cpp" />
     <ClCompile Include="fifth.cpp" />
     <ClCompile Include="first.cpp" />
     <ClCompile Include="fourth.cpp" />
