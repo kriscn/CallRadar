@@ -1,5 +1,6 @@
 #include <Windows.h>
 #include <stdint.h>
+#include <iostream>
 
 enum RadarRunningState
 {
@@ -74,21 +75,44 @@ struct RadarFrameMessage
 
     RadarRunningState GetRunningState()
     {
-        if (S3 == 0x55aa) {
+        switch (S3) {
+        case 0x55aa:
             switch (S4) {
-            case 0x0000:return Stopped;
-            case 0xaa55:return Returning;
-            case 0x0031:return ReadyA;
-            case 0x0032:return ReadyB;
-            case 0x0033:return ReadyC;
-            case 0x0034:return ReadyD;
-            case 0x0035:return ReadyE;
-            case 0x002a:return Completed;
-            case 0x0021:return Completed;
-            default:return None;
+            case 0x0000:
+                //std::cout << "Stopped"  << std::endl;
+                return Stopped;
+            case 0xaa55:
+                //std::cout << "Returning" << std::endl;
+                return Returning;
+            case 0x31:
+                //std::cout << "ReadyA" << std::endl;
+                return ReadyA;
+            case 0x32:
+                //std::cout << "ReadyB" << std::endl;
+                return ReadyB;
+            case 0x33:
+                //std::cout << "ReadyC" << std::endl;
+                return ReadyC;
+            case 0x34:
+                //std::cout << "ReadyD" << std::endl;
+                return ReadyD;
+            case 0x35:
+                //std::cout << "ReadyE" << std::endl;
+                return ReadyE;
+            case 0x002a:
+                //std::cout << "Completed Single" << std::endl;
+                return Completed;
+            case 0x0021:
+                //std::cout << "Completed Mult" << std::endl;
+                return Completed;
+            default:
+                //std::cout << "None,S4:" << S4 << std::endl;
+                return None;
             }
-        }
-        else {
+        case 0x0000:
+            //std::cout << "None,S4:" << S4 << std::endl;
+            return None;
+        default:
             return Scanning;
         }
     }

@@ -9,6 +9,7 @@
 #include <vector>
 #include <cstdint>
 #include "RadarFrameMessage.h"
+#include "Logger.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -22,7 +23,10 @@ public:
 
     bool create() {
         m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-        return m_socket != INVALID_SOCKET;
+        if (m_socket == INVALID_SOCKET) {
+            return false;
+        }
+        return true;
     }
 
     bool connect(const char* ip_address, int port) {
@@ -73,9 +77,10 @@ private:
     std::thread m_receive_thread;
     bool m_stop_receive_thread;
     std::atomic<std::chrono::time_point<std::chrono::system_clock>> m_last_receive_time;
+    RadarRunningState state = None;
 
     void receive_data() {
-        char recvBuff[6120];
+        char recvBuff[6120] = {0}; // 将数组中所有元素初始化为0;
         try {
             while (!m_stop_receive_thread) {
                 if (m_socket.receive(recvBuff, sizeof(recvBuff))) {
@@ -83,11 +88,7 @@ private:
                     // 处理接收到的数据
                     RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
                     //std::cout << "msg.S3:" << msg.S3 << ";msg.S4:" << msg.S4 << std::endl;
-                    RadarRunningState state = msg.GetRunningState();
-                    /*if (msg.S3 == 9) {
-                        std::cout << "header.value2:" << msg.Header.Value2  << std::endl;
-                    }*/
-                    
+                    state = msg.GetRunningState();
                 }
             }
         }
@@ -98,6 +99,10 @@ private:
 
 public:
     Lidar() : m_stop_receive_thread(false) {}
+
+    RadarRunningState getState() {
+        return state;
+    }
 
     bool connect(const char* ip_address, int port) {
         if (!m_socket.create()) {
@@ -111,7 +116,7 @@ public:
         }
 
         m_last_receive_time = std::chrono::system_clock::now();
-        m_receive_thread = std::thread(&Lidar::receive_data, this);
+        //m_receive_thread = std::thread(&Lidar::receive_data, this);
         return true;
     }
 
@@ -192,6 +197,7 @@ public:
 };
 
 int main() {
+    initLogger();  // 初始化 logger
     // 初始化 Winsock
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -205,7 +211,12 @@ int main() {
     if (!lidar.connect("192.168.1.199", 5000)) {
         std::cerr << "这里需要写发送给plc的重启雷达命令" << std::endl;
         return 1;
-    }    
+    }
+    else {
+        log4c->debug("success connect server");
+        lidar.start_receive();
+        std::cout << lidar.getState() << std::endl;
+    }
 
     std::string command;
     while (true) {
@@ -260,7 +271,7 @@ int main() {
             Sleep(500);
             //SendCommand DownloadGroupE
             // start_angle<270;end_agnle>90
-            if (!lidar.download_groupE(200, 160, 2, 300)) {
+            if (!lidar.download_groupE(200, 160, 2, 100)) {
                 std::cerr << "Failed to send download groupe command." << std::endl;
                 return 1;
             }

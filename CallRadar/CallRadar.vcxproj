@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>f:\pcl\PCL 1.12.1\3rdParty\Boost\include\boost-1_78;$(IncludePath)</IncludePath>
+    <IncludePath>F:\pcl\spdlog-1.x\spdlog-1.x\include;$(IncludePath)</IncludePath>
     <LibraryPath>“$(SolutionDir)\packages\DotNext.Buffers.3.0.0\lib\netstandard2.0”;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -151,6 +151,7 @@
     <ClCompile Include="third.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="Message.h" />
     <ClInclude Include="RadarCommandMessage.h" />
     <ClInclude Include="StdAfx.h" />
