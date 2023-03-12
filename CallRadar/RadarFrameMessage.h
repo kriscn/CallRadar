@@ -76,44 +76,58 @@ struct RadarFrameMessage
 
     RadarRunningState GetRunningState()
     {
+        //log4c->debug("................GetRunningState:S3:" + std::to_string(S3));
         switch (S3) {
         case 0x55aa:
+            log4c->debug("................0x55aa");
             switch (S4) {
             case 0x0000:
                 //std::cout << "Stopped"  << std::endl;
+                log4c->debug("................Stopped");
                 return Stopped;
             case 0xaa55:
                 //std::cout << "Returning" << std::endl;
+                log4c->debug("................Returning");
                 return Returning;
             case 0x31:
                 //std::cout << "ReadyA" << std::endl;
+                log4c->debug("................ReadyA");
                 return ReadyA;
             case 0x32:
                 //std::cout << "ReadyB" << std::endl;
+                log4c->debug("................ReadyB");
                 return ReadyB;
             case 0x33:
                 //std::cout << "ReadyC" << std::endl;
+                log4c->debug("................ReadyC");
                 return ReadyC;
             case 0x34:
                 //std::cout << "ReadyD" << std::endl;
+                log4c->debug("................ReadyD");
                 return ReadyD;
             case 0x35:
                 //std::cout << "ReadyE" << std::endl;
+                log4c->debug("................ReadyE");
                 return ReadyE;
             case 0x002a:
                 //std::cout << "Completed Single" << std::endl;
+                log4c->debug("................Completed1");
                 return Completed;
             case 0x0021:
                 //std::cout << "Completed Mult" << std::endl;
+                log4c->debug("................Completed2");
                 return Completed;
             default:
                 //std::cout << "None,S4:" << S4 << std::endl;
+                log4c->debug("................None1");
                 return None;
             }
         case 0x0000:
             //std::cout << "None,S4:" << S4 << std::endl;
+            //log4c->debug("................None2");
             return None;
         default:
+            log4c->debug("................Scanning  S3:"+std::to_string(S3) + ";S4:" + std::to_string(S4)+";Header:" + std::to_string(Header.Value1) + ";Footer:" + std::to_string(Footer->Value1));
             return Scanning;
         }
     }

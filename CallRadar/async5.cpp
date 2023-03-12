@@ -86,12 +86,13 @@ private:
         log4c->debug("........receive_data:m_stop_receive_thread:" + std::to_string(m_stop_receive_thread));
         try {
             while (!m_stop_receive_thread) {
-                log4c->debug("........m_socket.receive");
+                //log4c->debug("........m_socket.receive");
                 if (m_socket.receive(recvBuff, sizeof(recvBuff))) {
                     m_last_receive_time = std::chrono::system_clock::now();
                     // 处理接收到的数据
                     RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
                     //std::cout << "msg.S3:" << msg.S3 << ";msg.S4:" << msg.S4 << std::endl;
+                    log4c->info("msg.S3" + std::to_string(msg.S3) + ";msg.S4:" + std::to_string(msg.S4));
                     state = msg.GetRunningState();
                 }
             }
