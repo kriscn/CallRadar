@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <stdint.h>
 #include <iostream>
+#include "Logger.h"
 
 enum RadarRunningState
 {

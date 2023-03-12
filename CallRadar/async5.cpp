@@ -80,9 +80,13 @@ private:
     RadarRunningState state = None;
 
     void receive_data() {
-        char recvBuff[6120] = {0}; // 将数组中所有元素初始化为0;
+        log4c->debug("receive_data");
+        log4c->debug("........receive_data");
+        char recvBuff[6120] = { 0 }; // 将数组中所有元素初始化为0;
+        log4c->debug("........receive_data:m_stop_receive_thread:" + std::to_string(m_stop_receive_thread));
         try {
             while (!m_stop_receive_thread) {
+                log4c->debug("........m_socket.receive");
                 if (m_socket.receive(recvBuff, sizeof(recvBuff))) {
                     m_last_receive_time = std::chrono::system_clock::now();
                     // 处理接收到的数据
@@ -127,6 +131,7 @@ public:
     }
 
     void start_receive() {
+        log4c->debug("start_receive");
         m_last_receive_time = std::chrono::system_clock::now();
         m_receive_thread = std::thread(&Lidar::receive_data, this);
     }

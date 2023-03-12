@@ -134,7 +134,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="async.cpp" />
-    <ClCompile Include="async2.cpp" />
     <ClCompile Include="async3.cpp" />
     <ClCompile Include="async4.cpp" />
     <ClCompile Include="chatgpt.cpp" />
@@ -142,6 +141,7 @@
     <ClCompile Include="first.cpp" />
     <ClCompile Include="fourth.cpp" />
     <ClCompile Include="async5.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="RadarFrameMessage.h" />
     <ClCompile Include="savefile.cpp" />
     <ClCompile Include="second.cpp" />
