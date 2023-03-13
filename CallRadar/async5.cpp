@@ -48,15 +48,18 @@ public:
     }
 
     bool receive(char* buffer, int length) {
-        int bytes_received = ::recv(m_socket, buffer, length, 0);
-        if (bytes_received == SOCKET_ERROR) {
-            return false;
+        int total_bytes_received = 0; // 已接收到的字节数
+        int bytes_received = 0; // 每次接收到的字节数
+        while (total_bytes_received < length) {
+            bytes_received = ::recv(m_socket, buffer + total_bytes_received, length - total_bytes_received, 0);
+            if (bytes_received == SOCKET_ERROR) {
+                return false;
+            }
+            else if (bytes_received == 0) {
+                return false;
+            }
+            total_bytes_received += bytes_received;
         }
-        else if (bytes_received == 0) {
-            return false;
-        }
-
-        buffer[bytes_received] = '\0';
         return true;
     }
 
@@ -86,15 +89,19 @@ private:
         log4c->debug("........receive_data:m_stop_receive_thread:" + std::to_string(m_stop_receive_thread));
         try {
             while (!m_stop_receive_thread) {
-                //log4c->debug("........m_socket.receive");
-                if (m_socket.receive(recvBuff, sizeof(recvBuff))) {
-                    m_last_receive_time = std::chrono::system_clock::now();
-                    // 处理接收到的数据
-                    RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
-                    //std::cout << "msg.S3:" << msg.S3 << ";msg.S4:" << msg.S4 << std::endl;
-                    log4c->info("msg.S3" + std::to_string(msg.S3) + ";msg.S4:" + std::to_string(msg.S4));
-                    state = msg.GetRunningState();
+                // 接收1020组数据
+                for (int i = 0; i < 1020; i++) {
+                    if (m_socket.receive(recvBuff + i * 6, 6)) { // 每个数据组为6个字节
+                        m_last_receive_time = std::chrono::system_clock::now();
+                    }
+                    else {
+                        break;
+                    }
                 }
+                // 处理接收到的数据
+                RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
+                log4c->info("Received. ============================ S3=" + std::to_string(msg.S3) + ", S4=" + std::to_string(msg.S4));
+                //state = msg.GetRunningState();
             }
         }
         catch (const std::exception& e) {
