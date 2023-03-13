@@ -3,18 +3,21 @@
 #include <iostream>
 #include "Logger.h"
 
-enum RadarRunningState
-{
-    None = 0,
-    Stopped = 1,
-    Returning = 2,
-    Completed = 3,
-    ReadyA = 4,
-    ReadyB = 5,
-    ReadyC = 6,
-    ReadyD = 7,
-    ReadyE = 8,
-    Scanning = 9
+class RadarRunningCls {
+public:
+    enum RadarRunningState
+    {
+        None = 0,
+        Stopped = 1,
+        Returning = 2,
+        Completed = 3,
+        ReadyA = 4,
+        ReadyB = 5,
+        ReadyC = 6,
+        ReadyD = 7,
+        ReadyE = 8,
+        Scanning = 9
+    };
 };
 
 #pragma pack(push, 1)
@@ -74,61 +77,61 @@ struct RadarFrameMessage
     RadarFrameMessagePoint SpareGroups[8];
     RadarFrameMessagePoint Tail;
 
-    RadarRunningState GetRunningState()
+    RadarRunningCls::RadarRunningState GetRunningState()
     {
         //log4c->debug("................GetRunningState:S3:" + std::to_string(S3));
         switch (S3) {
         case 0x55aa:
-            log4c->debug("................0x55aa");
+            //log4c->debug("................0x55aa");
             switch (S4) {
             case 0x0000:
                 //std::cout << "Stopped"  << std::endl;
-                log4c->debug("................Stopped");
-                return Stopped;
+                //log4c->debug("................Stopped");
+                return RadarRunningCls::Stopped;
             case 0xaa55:
                 //std::cout << "Returning" << std::endl;
-                log4c->debug("................Returning");
-                return Returning;
+                //log4c->debug("................Returning");
+                return RadarRunningCls::Returning;
             case 0x31:
                 //std::cout << "ReadyA" << std::endl;
-                log4c->debug("................ReadyA");
-                return ReadyA;
+                //log4c->debug("................ReadyA");
+                return RadarRunningCls::ReadyA;
             case 0x32:
                 //std::cout << "ReadyB" << std::endl;
-                log4c->debug("................ReadyB");
-                return ReadyB;
+                //log4c->debug("................ReadyB");
+                return RadarRunningCls::ReadyB;
             case 0x33:
                 //std::cout << "ReadyC" << std::endl;
-                log4c->debug("................ReadyC");
-                return ReadyC;
+                //log4c->debug("................ReadyC");
+                return RadarRunningCls::ReadyC;
             case 0x34:
                 //std::cout << "ReadyD" << std::endl;
-                log4c->debug("................ReadyD");
-                return ReadyD;
+                //log4c->debug("................ReadyD");
+                return RadarRunningCls::ReadyD;
             case 0x35:
                 //std::cout << "ReadyE" << std::endl;
-                log4c->debug("................ReadyE");
-                return ReadyE;
+                //log4c->debug("................ReadyE");
+                return RadarRunningCls::ReadyE;
             case 0x002a:
                 //std::cout << "Completed Single" << std::endl;
-                log4c->debug("................Completed1");
-                return Completed;
+                //log4c->debug("................Completed1");
+                return RadarRunningCls::Completed;
             case 0x0021:
                 //std::cout << "Completed Mult" << std::endl;
-                log4c->debug("................Completed2");
-                return Completed;
+                //log4c->debug("................Completed2");
+                return RadarRunningCls::Completed;
             default:
                 //std::cout << "None,S4:" << S4 << std::endl;
-                log4c->debug("................None1");
-                return None;
+                //log4c->debug("................None1");
+                return RadarRunningCls::None;
             }
         case 0x0000:
             //std::cout << "None,S4:" << S4 << std::endl;
             //log4c->debug("................None2");
-            return None;
+            return RadarRunningCls::None;
         default:
-            log4c->debug("................Scanning  S3:"+std::to_string(S3) + ";S4:" + std::to_string(S4)+";Header:" + std::to_string(Header.Value1) + ";Footer:" + std::to_string(Footer->Value1));
-            return Scanning;
+            //log4c->debug("................Scanning  S3:"+std::to_string(S3) + ";S4:" + std::to_string(S4)+";Header:" + std::to_string(Header.Value1) + ";Footer:" + std::to_string(Footer->Value1));
+            return RadarRunningCls::Scanning;
         }
     }
 };

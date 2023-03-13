@@ -39,9 +39,6 @@
     <ClCompile Include="async.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="async2.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="async3.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -51,9 +48,6 @@
     <ClCompile Include="async5.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="RadarFrameMessage.h">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="StructConverter.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -61,6 +55,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="chatgpt.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RadarFrameMessage.h">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RadarFrameMessageHelper.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -75,6 +78,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CloudPoints.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

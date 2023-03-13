@@ -10,6 +10,7 @@
 #include <cstdint>
 #include "RadarFrameMessage.h"
 #include "Logger.h"
+#include <list>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -80,39 +81,14 @@ private:
     std::thread m_receive_thread;
     bool m_stop_receive_thread;
     std::atomic<std::chrono::time_point<std::chrono::system_clock>> m_last_receive_time;
-    RadarRunningState state = None;
+    RadarRunningCls::RadarRunningState state = RadarRunningCls::RadarRunningState::None;
 
-    void receive_data() {
-        log4c->debug("receive_data");
-        log4c->debug("........receive_data");
-        char recvBuff[6120] = { 0 }; // 将数组中所有元素初始化为0;
-        log4c->debug("........receive_data:m_stop_receive_thread:" + std::to_string(m_stop_receive_thread));
-        try {
-            while (!m_stop_receive_thread) {
-                // 接收1020组数据
-                for (int i = 0; i < 1020; i++) {
-                    if (m_socket.receive(recvBuff + i * 6, 6)) { // 每个数据组为6个字节
-                        m_last_receive_time = std::chrono::system_clock::now();
-                    }
-                    else {
-                        break;
-                    }
-                }
-                // 处理接收到的数据
-                RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
-                log4c->info("Received. ============================ S3=" + std::to_string(msg.S3) + ", S4=" + std::to_string(msg.S4));
-                //state = msg.GetRunningState();
-            }
-        }
-        catch (const std::exception& e) {
-            std::cerr << "Error sending data: " << e.what() << std::endl;
-        }
-    }
+    void receive_data();
 
 public:
     Lidar() : m_stop_receive_thread(false) {}
 
-    RadarRunningState getState() {
+    RadarRunningCls::RadarRunningState getState() {
         return state;
     }
 
@@ -139,7 +115,7 @@ public:
     }
 
     void start_receive() {
-        log4c->debug("start_receive");
+        //log4c->debug("start_receive");
         m_last_receive_time = std::chrono::system_clock::now();
         m_receive_thread = std::thread(&Lidar::receive_data, this);
     }
@@ -319,4 +295,55 @@ int main() {
     }
 
     return 0;
+}
+
+//RadarFrameMessage *_lastRadarData;
+std::vector<RadarFrameMessage> emptyVector;
+const std::vector<RadarFrameMessage> _lastRadarData;
+std::vector<RadarFrameMessage> _radarDataList;
+
+inline void Lidar::receive_data() {
+    log4c->debug("........receive_data");
+    char recvBuff[6120] = { 0 }; // 将数组中所有元素初始化为0;
+    log4c->debug("........receive_data:m_stop_receive_thread:" + std::to_string(m_stop_receive_thread));
+    try {
+        while (!m_stop_receive_thread) {
+            // 接收1020组数据
+            for (int i = 0; i < 1020; i++) {
+                if (m_socket.receive(recvBuff + i * 6, 6)) { // 每个数据组为6个字节
+                    m_last_receive_time = std::chrono::system_clock::now();
+                }
+                else {
+                    break;
+                }
+            }
+            // 处理接收到的数据
+            RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
+            //log4c->info("Received. ============================ S3=" + std::to_string(msg.S3) + ", S4=" + std::to_string(msg.S4));
+            RadarRunningCls::RadarRunningState lastRunningState = RadarRunningCls::RadarRunningState::None;
+            RadarRunningCls::RadarRunningState _radarRunningState = msg.GetRunningState();
+            //state = msg.GetRunningState();
+            if (_radarRunningState == RadarRunningCls::RadarRunningState::Scanning && lastRunningState != RadarRunningCls::RadarRunningState::Scanning)
+            {
+                //_lastRadarData = emptyVector;
+                //_radarDataList.clear();
+                log4c->debug("1");
+            }
+            if (_radarRunningState == RadarRunningCls::RadarRunningState::Scanning)
+            {
+                //_radarDataList.Add(frameMessage);
+                _radarDataList.push_back(msg);
+                log4c->debug("2..._radarDataList.size:{}", _radarDataList.size());
+            }
+            if (_radarRunningState != RadarRunningCls::RadarRunningState::Scanning && lastRunningState == RadarRunningCls::RadarRunningState::Scanning)
+            {
+                log4c->debug("3");
+                //_lastRadarData = _radarDataList;
+                //_radarDataList = std::vector<RadarFrameMessage>();
+            }
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Error sending data: " << e.what() << std::endl;
+    }
 }
