@@ -1,7 +1,4 @@
-#include <cmath>
-#include <math.h>
-#include "CloudPoints.h"
-#include "RadarFrameMessage.h"
+#include "main.h"
 
 #define M_PI 3.14159265358979323846
 
@@ -25,9 +22,9 @@ public:
             const double pitchAngleStart = startMessage.S3;
             const double pitchAngleEnd = startMessage.S4;
             
-            /*const double startPointAngle = startMessage.Points[startMessage.Points.size() - 1].Value2;
+            const double startPointAngle = startMessage.Points[sizeof(startMessage.Points)/6 - 1].Value2;
             const double factorPitch = (pitchAngleEnd - pitchAngleStart) /
-                (double)(messages[i * 3 + 2].Points[startMessage.Points.size() - 1].Value2 - startPointAngle);*/
+                (double)(messages[i * 3 + 2].Points[sizeof(startMessage.Points)/6 - 1].Value2 - startPointAngle);
 
             /*auto fp = [&](const RadarFrameMessagePoint& p) {
                 if (p.Value1 != 0) {

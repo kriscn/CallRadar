@@ -8,9 +8,11 @@
 #include <atomic>
 #include <vector>
 #include <cstdint>
-#include "RadarFrameMessage.h"
+//#include "RadarFrameMessage.h"
 #include "Logger.h"
 #include <list>
+#include "main.h"
+#include "RadarFrameMessageHelper.cpp"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -338,6 +340,7 @@ inline void Lidar::receive_data() {
             {   
                 _lastRadarData = _radarDataList;
                 _radarDataList = std::vector<RadarFrameMessage>();
+                RadarFrameMessageHelper::ConvertToPoints(_lastRadarData);
                 log4c->debug("3");
             }
         }
