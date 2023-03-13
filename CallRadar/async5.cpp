@@ -299,8 +299,9 @@ int main() {
 
 //RadarFrameMessage *_lastRadarData;
 std::vector<RadarFrameMessage> emptyVector;
-const std::vector<RadarFrameMessage> _lastRadarData;
+std::vector<RadarFrameMessage> _lastRadarData;
 std::vector<RadarFrameMessage> _radarDataList;
+RadarRunningCls::RadarRunningState _radarRunningState = RadarRunningCls::RadarRunningState::None;
 
 inline void Lidar::receive_data() {
     log4c->debug("........receive_data");
@@ -320,26 +321,24 @@ inline void Lidar::receive_data() {
             // 处理接收到的数据
             RadarFrameMessage msg = *reinterpret_cast<RadarFrameMessage*>(recvBuff);
             //log4c->info("Received. ============================ S3=" + std::to_string(msg.S3) + ", S4=" + std::to_string(msg.S4));
-            RadarRunningCls::RadarRunningState lastRunningState = RadarRunningCls::RadarRunningState::None;
-            RadarRunningCls::RadarRunningState _radarRunningState = msg.GetRunningState();
-            //state = msg.GetRunningState();
+            RadarRunningCls::RadarRunningState lastRunningState = _radarRunningState;
+            _radarRunningState = msg.GetRunningState();
             if (_radarRunningState == RadarRunningCls::RadarRunningState::Scanning && lastRunningState != RadarRunningCls::RadarRunningState::Scanning)
             {
-                //_lastRadarData = emptyVector;
-                //_radarDataList.clear();
+                _lastRadarData = emptyVector;
+                _radarDataList.clear();
                 log4c->debug("1");
             }
             if (_radarRunningState == RadarRunningCls::RadarRunningState::Scanning)
             {
-                //_radarDataList.Add(frameMessage);
                 _radarDataList.push_back(msg);
                 log4c->debug("2..._radarDataList.size:{}", _radarDataList.size());
             }
             if (_radarRunningState != RadarRunningCls::RadarRunningState::Scanning && lastRunningState == RadarRunningCls::RadarRunningState::Scanning)
-            {
+            {   
+                _lastRadarData = _radarDataList;
+                _radarDataList = std::vector<RadarFrameMessage>();
                 log4c->debug("3");
-                //_lastRadarData = _radarDataList;
-                //_radarDataList = std::vector<RadarFrameMessage>();
             }
         }
     }
