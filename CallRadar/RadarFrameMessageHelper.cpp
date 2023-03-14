@@ -1,4 +1,7 @@
 #include "main.h"
+#include "Logger.h"
+#include <span>
+#include <numeric>
 
 #define M_PI 3.14159265358979323846
 
@@ -24,9 +27,8 @@ public:
             
             const double startPointAngle = startMessage.Points[sizeof(startMessage.Points)/6 - 1].Value2;
             const double factorPitch = (pitchAngleEnd - pitchAngleStart) /
-                (double)(messages[i * 3 + 2].Points[sizeof(startMessage.Points)/6 - 1].Value2 - startPointAngle);
-
-            /*auto fp = [&](const RadarFrameMessagePoint& p) {
+                (double)(messages[i * 3 + 2].Points[sizeof(startMessage.Points)/6 - 1].Value2 - startPointAngle);            
+            auto fp = [&](const RadarFrameMessagePoint& p) {
                 if (p.Value1 != 0) {
                     const double distance = p.Value1 * _distanceFactor;
                     const double scanAngle = p.Value2 * _scanAngleFactor;
@@ -34,14 +36,13 @@ public:
                     const double x0 = distance * sin(scanAngle);
                     const double pitchAngleSin = sin(pitchAngle);
                     const double pitchAngleCos = cos(pitchAngle);
-                    points.emplace_back(CloudPoint{
+                    points.push_back(CloudPoint{
                         (float)(_radarDistance * pitchAngleSin + x0 * pitchAngleCos),
                         (float)(-cos(scanAngle) * distance),
                         (float)(_radarDistance * pitchAngleCos - x0 * pitchAngleSin)
                         });
                 }
             };
-
             for (const auto& p : startMessage.Points) {
                 fp(p);
             }
@@ -50,9 +51,8 @@ public:
             }
             for (const auto& p : messages[i * 3 + 2].Points) {
                 fp(p);
-            }*/
+            }
         }
-
         return points;
     }
 };

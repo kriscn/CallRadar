@@ -308,7 +308,7 @@ RadarRunningCls::RadarRunningState _radarRunningState = RadarRunningCls::RadarRu
 inline void Lidar::receive_data() {
     log4c->debug("........receive_data");
     char recvBuff[6120] = { 0 }; // 将数组中所有元素初始化为0;
-    log4c->debug("........receive_data:m_stop_receive_thread:" + std::to_string(m_stop_receive_thread));
+    //log4c->debug("........receive_data:m_stop_receive_thread:" + std::to_string(m_stop_receive_thread));
     try {
         while (!m_stop_receive_thread) {
             // 接收1020组数据
@@ -334,13 +334,13 @@ inline void Lidar::receive_data() {
             if (_radarRunningState == RadarRunningCls::RadarRunningState::Scanning)
             {
                 _radarDataList.push_back(msg);
-                log4c->debug("2..._radarDataList.size:{}", _radarDataList.size());
+                //log4c->debug("2..._radarDataList.size:{}", _radarDataList.size());
             }
             if (_radarRunningState != RadarRunningCls::RadarRunningState::Scanning && lastRunningState == RadarRunningCls::RadarRunningState::Scanning)
             {   
                 _lastRadarData = _radarDataList;
                 _radarDataList = std::vector<RadarFrameMessage>();
-                RadarFrameMessageHelper::ConvertToPoints(_lastRadarData);
+                std::vector<CloudPoint> points = RadarFrameMessageHelper::ConvertToPoints(_lastRadarData);
                 log4c->debug("3");
             }
         }
