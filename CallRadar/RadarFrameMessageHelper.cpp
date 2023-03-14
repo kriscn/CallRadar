@@ -55,4 +55,31 @@ public:
         }
         return points;
     }
+
+    struct Test {
+        void Test4(float* s, int length)
+        {
+            for (int i = 0; i < length * 3; i++)
+            {
+                std::cout << *(s + i) << " ";
+            }
+        }
+    };
+
+    static void Execute(std::vector<CloudPoint>& points)
+    {
+        Test t;
+        float* s = new float[points.size() * 3];
+        for (int i = 0; i < points.size(); i++)
+        {
+            int offset = i * 3;
+            *(s + offset) = points[i].X;
+            *(s + offset + 1) = points[i].Y;
+            *(s + offset + 2) = points[i].Z;
+        }
+
+        t.Test4(s, points.size());
+
+        delete[] s;
+    }
 };

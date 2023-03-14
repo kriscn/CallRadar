@@ -341,6 +341,7 @@ inline void Lidar::receive_data() {
                 _lastRadarData = _radarDataList;
                 _radarDataList = std::vector<RadarFrameMessage>();
                 std::vector<CloudPoint> points = RadarFrameMessageHelper::ConvertToPoints(_lastRadarData);
+                RadarFrameMessageHelper::Execute(points);
                 log4c->debug("3");
             }
         }
